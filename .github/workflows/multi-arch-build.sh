@@ -16,11 +16,11 @@ if [ $(docker buildx ls  2>/dev/null | wc -l) > 0 ]; then
     echo "Creating Docker builder... Done."
 fi
 
-echo "Logging into container registry as ${GITHUB_USER}..."
-docker login ghcr.io -u ${GITHUB_USER} -p ${GITHUB_PAT} 
-echo "Logging into container registry... Done."
+#echo "Logging into container registry as ${GITHUB_USER}..."
+#docker login ghcr.io -u ${GITHUB_USER} -p ${GITHUB_PAT} 
+#echo "Logging into container registry... Done."
 
 echo "Starting Docker image build..."
-echo "Tagging image with '${TAG_SERVICE_TAG}'..."
-docker buildx build --push --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6 --tag ghcr.io/${TAG_SERVICE_PROJECT}:${TAG_SERVICE_TAG} .
+#echo "Tagging image with '${TAG_SERVICE_TAG}'..."
+docker buildx build --push --platform linux/amd64,linux/arm64,linux/arm/v7,linux/arm/v6 --tag ghcr.io/tulsasoftware/ucontrol-genesis-tag-service:test .
 echo "Docker image build... Done."
