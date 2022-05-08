@@ -14,6 +14,13 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
+
     - name: Build the Docker image
-      run: "${GITHUB_WORKSPACE}/multi-arch-build.sh"
-      shell: bash
+      run: docker build . --tag $IMAGE_NAME
+
+    - name: Login to GHCR
+      run: echo "${{ secrets.GHPAT }}" | docker login https://ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Push to GHCR
+      run: |
+      IMAGE_ID=ghcr.io/${{ github.repository_owner }}/$IMAGE_NAME:${{ github.run_id }}
