@@ -1,0 +1,136 @@
+[
+    {
+        "id": "9cd04e66d33cf8de",
+        "type": "tab",
+        "label": "Telemetry",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "216011d476909ad8",
+        "type": "tab",
+        "label": "Configuration",
+        "disabled": true,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "a6d84a2516e8126c",
+        "type": "mqtt-broker",
+        "name": "",
+        "broker": "broker",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthRetain": "false",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closeRetain": "false",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willRetain": "false",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "7f32b6350be76a13",
+        "type": "influxdb",
+        "hostname": "127.0.0.1",
+        "port": "8086",
+        "protocol": "http",
+        "database": "database",
+        "name": "influxdb",
+        "usetls": false,
+        "tls": "",
+        "influxdbVersion": "1.8-flux",
+        "url": "http://influxdb:8086",
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "b62e969a34570db1",
+        "type": "mqtt in",
+        "z": "9cd04e66d33cf8de",
+        "name": "Vfdctl Telemetry",
+        "topic": "dt/vfdctl/#",
+        "qos": "0",
+        "datatype": "json",
+        "broker": "a6d84a2516e8126c",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 220,
+        "y": 500,
+        "wires": [
+            [
+                "9b497653a5385761"
+            ]
+        ]
+    },
+    {
+        "id": "48c489686efbf404",
+        "type": "influxdb out",
+        "z": "9cd04e66d33cf8de",
+        "influxdb": "7f32b6350be76a13",
+        "name": "Insert Into Telemetry db",
+        "measurement": "",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "telemetry",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "organisation",
+        "bucket": "bucket",
+        "x": 890,
+        "y": 500,
+        "wires": []
+    },
+    {
+        "id": "9b497653a5385761",
+        "type": "function",
+        "z": "9cd04e66d33cf8de",
+        "name": "Data Integrity and Grooming",
+        "func": "// topic : \"dt/vfdctl/vfd1/motorhp\"\n// payload : {\"name\":\"motorhp\",\"value\":0,\"units\":\"HP\"}\n\nvar parts = msg.topic.split('/');\nvar publishingDevice = parts[2];\n\nvalues = { value : msg.payload[\"value\"] };\ntags = { device : publishingDevice, measurement : msg.payload[\"name\"]};\nmsg.measurement = parts[1];\nmsg.payload = [ values, tags ];\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 500,
+        "wires": [
+            [
+                "48c489686efbf404",
+                "15a47808e9b9b669"
+            ]
+        ]
+    },
+    {
+        "id": "15a47808e9b9b669",
+        "type": "debug",
+        "z": "9cd04e66d33cf8de",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 790,
+        "y": 620,
+        "wires": []
+    }
+]

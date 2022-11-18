@@ -12,11 +12,12 @@ services:
     environment:
       - TZ=US/Central
     ports:
-      #GUI WILL LIVE ON 3080
+      #DEV GUI WILL LIVE ON 3080
       - "3080:1880"
-      - "1433:1433"
-      - "1434:1434"
-      - "50202:50202"
+    depends_on:
+      - influxdb
+      - broker
+      - couchdb
     networks:
       - node-red-net
     volumes:
@@ -28,7 +29,7 @@ services:
     env_file:
       - ".env"
     ports:
-      - "${COUCHDB_PORT}:5984"
+      - "5984:5984"
     networks:
       - node-red-net
     volumes:
@@ -37,25 +38,13 @@ services:
     restart: always
     #on launch, create the default system databases
     # command: ["sh", "-c", "/opt/couchdb/bin/couchdb & { sleep 3 ; curl -X PUT http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984/_users ; curl -X PUT http://${COUCHDB_USER}:${COUCHDB_PASSWORD}@${COUCHDB_IP}:5984/_replicator ; fg ; }"]
-    #In another window, after startup:
 
-    # $ curl localhost:5984
-    # {"couchdb":"Welcome","version":"2.1.1","features":["scheduler"],"vendor":{"name":"The Apache Software Foundation"}}
-    # $ curl -X PUT http://admin:password@localhost:5984/_users
-    # {"ok":true}
-    # $ curl -X PUT http://admin:password@localhost:5984/_replicator
-    # {"ok":true}
-    # $ curl -X PUT http://admin:password@localhost:5984/_global_changes
-    # {"ok":true}
-
-    #from 0.0.0.0:5984/_utils gui, login
-    #DELETE global_changes db (not needed, requires extra resources)
-    #CREATE vfdctl_settings (no partition)
-  # Creates an InfluxDB instance to store the
-  # telemetry results
+  # Creates an InfluxDB instance to store the telemetry results
   influxdb:
     image: influxdb:1.8.10
     restart: always
+    networks:
+      - node-red-net
     volumes:
       - ../../ucontroldata/influxdb/:/var/lib/influxdb
     ports:
@@ -65,21 +54,29 @@ services:
       - INFLUXDB_ADMIN_USER=${INFLUXDB_USER}
       - INFLUXDB_ADMIN_PASSWORD=${INFLUXDB_PASS}
       - INFLUXDB_DB=telemetry
-
-  # Displays the results in a Grafana dashborad
-  grafana:
-    image: grafana/grafana:latest
+  # mqtt broker
+  broker:
+    image: emqx/nanomq:0.11.0
     restart: always
+    networks:
+      - node-red-net
+    ports:
+      - "1883:1883"
+      - "8883:8883"
+#Manage the influxdb
+  chronograf:
+    image: chronograf:latest
+    restart: always
+    networks:
+      - node-red-net
+    volumes:
+      # Mount for chronograf database
+      - ../../ucontroldata/chronograf/:/var/lib/chronograf/
+    ports:
+      # The WebUI for Chronograf is served on port 8888
+      - "8888:8888"
     depends_on:
       - influxdb
-    ports:
-      - 3000:3000
-    volumes:
-      - ../../ucontroldata/grafana/:/var/lib/grafana
 
 networks:
   node-red-net:
-      ipam:
-        driver: default
-        config:
-        - subnet: ${TAG_SERVICE_SUBNET}
